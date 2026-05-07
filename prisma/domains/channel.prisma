@@ -1,0 +1,78 @@
+// Domain: Channel Builder (Storefront)
+
+/// Global - di-seed oleh platform, dipakai semua tenant.
+model ChannelTemplate {
+  id              BigInt    @id @default(autoincrement())
+  name            String    @db.VarChar(100)
+  slug            String    @unique @db.VarChar(100)
+  previewImageUrl String?   @map("preview_image_url") @db.VarChar(500)
+  defaultLayout   Json      @map("default_layout")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  channels Channel[]
+
+  @@map("channel_templates")
+}
+
+model Channel {
+  id                BigInt    @id @default(autoincrement())
+  commerceAccountId BigInt    @map("commerce_account_id")
+  shopId            BigInt    @map("shop_id")
+  templateId        BigInt?   @map("template_id")
+  slug              String    @unique @db.VarChar(100)
+  name              String    @db.VarChar(255)
+  layout            Json
+  metaTitle         String?   @map("meta_title") @db.VarChar(255)
+  metaDescription   String?   @map("meta_description") @db.VarChar(500)
+  ogImageUrl        String?   @map("og_image_url") @db.VarChar(500)
+  visitorCount      BigInt    @default(0) @map("visitor_count")
+  status            String    @default("draft") @db.VarChar(20)
+  publishedAt       DateTime? @map("published_at")
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  commerceAccount CommerceAccount  @relation(fields: [commerceAccountId], references: [id])
+  shop            Shop             @relation(fields: [shopId], references: [id])
+  template        ChannelTemplate? @relation(fields: [templateId], references: [id])
+  products        ChannelProduct[]
+  visits          ChannelVisit[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([commerceAccountId])
+  @@map("channels")
+}
+
+model ChannelProduct {
+  id         BigInt    @id @default(autoincrement())
+  channelId  BigInt    @map("channel_id")
+  productId  BigInt    @map("product_id")
+  sortOrder  Int       @default(0) @map("sort_order")
+  isFeatured Boolean   @default(false) @map("is_featured")
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, productId])
+  @@map("channel_products")
+}
+
+/// Raw analytics. Aggregate ke summary table di MVP berikutnya.
+model ChannelVisit {
+  id           BigInt   @id @default(autoincrement())
+  channelId    BigInt   @map("channel_id")
+  visitorHash  String   @map("visitor_hash") @db.VarChar(64)
+  referrer     String?  @db.VarChar(500)
+  countryCode  String?  @map("country_code") @db.VarChar(2)
+  visitedAt    DateTime @map("visited_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, visitedAt])
+  @@map("channel_visits")
+}

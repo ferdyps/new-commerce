@@ -17,6 +17,7 @@ model Shop {
 
   commerceAccount CommerceAccount @relation(fields: [commerceAccountId], references: [id])
   products        Product[]
+  channels        Channel[]
 
   @@index([commerceAccountId])
   @@index([slug])
@@ -68,6 +69,7 @@ model Product {
   category        Category?        @relation(fields: [categoryId], references: [id])
   images          ProductImage[]
   variants        ProductVariant[]
+  channelProducts ChannelProduct[]
 
   @@unique([commerceAccountId, slug])
   @@index([commerceAccountId, status])
