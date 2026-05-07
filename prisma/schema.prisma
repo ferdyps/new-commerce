@@ -39,8 +39,11 @@ model CommerceAccount {
   updatedAt   DateTime? @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  ownerUser User                    @relation("CommerceAccountOwner", fields: [ownerUserId], references: [id])
-  members   CommerceAccountMember[]
+  ownerUser  User                    @relation("CommerceAccountOwner", fields: [ownerUserId], references: [id])
+  members    CommerceAccountMember[]
+  shops      Shop[]
+  categories Category[]
+  products   Product[]
 
   @@index([slug])
   @@index([status])
