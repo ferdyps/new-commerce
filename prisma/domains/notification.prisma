@@ -1,0 +1,53 @@
+// Domain: Notification
+
+/// Polymorphic target — notifiable_type + notifiable_id are app-layer resolved; no Prisma relation.
+model Notification {
+  id             String    @id @default(uuid()) @map("id") @db.VarChar(36)
+  type           String    @db.VarChar(255)
+  notifiableType String    @map("notifiable_type") @db.VarChar(100)
+  notifiableId   BigInt    @map("notifiable_id")
+  data           Json
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime? @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  @@index([notifiableType, notifiableId])
+  @@index([readAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id               BigInt    @id @default(autoincrement())
+  userId           BigInt    @map("user_id")
+  onesignalPlayerId String   @unique @map("onesignal_player_id") @db.VarChar(100)
+  platform         String    @db.VarChar(20)
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime? @default(now()) @map("created_at")
+  updatedAt        DateTime? @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model NotificationLog {
+  id                BigInt    @id @default(autoincrement())
+  userId            BigInt    @map("user_id")
+  channel           String    @db.VarChar(20)
+  provider          String?   @db.VarChar(30)
+  providerMessageId String?   @map("provider_message_id") @db.VarChar(100)
+  subject           String?   @db.VarChar(255)
+  bodyPreview       String?   @map("body_preview") @db.VarChar(500)
+  status            String    @db.VarChar(20)
+  error             String?   @db.Text
+  sentAt            DateTime? @map("sent_at")
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("notification_logs")
+}

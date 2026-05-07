@@ -29,6 +29,8 @@ model User {
   approvedWithdrawals        WithdrawalRequest[]
   carts                      Cart[]
   orders                     Order[]
+  pushSubscriptions          PushSubscription[]
+  notificationLogs           NotificationLog[]
 
   @@map("users")
 }
