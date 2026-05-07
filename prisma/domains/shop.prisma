@@ -15,9 +15,11 @@ model Shop {
   updatedAt         DateTime? @updatedAt @map("updated_at")
   deletedAt         DateTime? @map("deleted_at")
 
-  commerceAccount CommerceAccount @relation(fields: [commerceAccountId], references: [id])
-  products        Product[]
-  channels        Channel[]
+  commerceAccount   CommerceAccount    @relation(fields: [commerceAccountId], references: [id])
+  products          Product[]
+  channels          Channel[]
+  affiliatePrograms AffiliateProgram[]
+  orders            Order[]
 
   @@index([commerceAccountId])
   @@index([slug])
@@ -70,6 +72,9 @@ model Product {
   images          ProductImage[]
   variants        ProductVariant[]
   channelProducts ChannelProduct[]
+  affiliateLinks  AffiliateLink[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
 
   @@unique([commerceAccountId, slug])
   @@index([commerceAccountId, status])
@@ -104,7 +109,9 @@ model ProductVariant {
   createdAt   DateTime? @default(now()) @map("created_at")
   updatedAt   DateTime? @updatedAt @map("updated_at")
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   @@index([productId])
   @@map("product_variants")

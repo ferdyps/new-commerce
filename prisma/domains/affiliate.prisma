@@ -1,0 +1,139 @@
+// Domain: Affiliate
+
+model AffiliateProgram {
+  id                       BigInt    @id @default(autoincrement())
+  commerceAccountId        BigInt    @map("commerce_account_id")
+  shopId                   BigInt    @map("shop_id")
+  name                     String    @db.VarChar(255)
+  defaultCommissionPercent Decimal   @map("default_commission_percent") @db.Decimal(5, 2)
+  terms                    String?   @db.Text
+  isActive                 Boolean   @default(true) @map("is_active")
+  createdAt                DateTime? @default(now()) @map("created_at")
+  updatedAt                DateTime? @updatedAt @map("updated_at")
+
+  commerceAccount CommerceAccount @relation(fields: [commerceAccountId], references: [id])
+  shop            Shop            @relation(fields: [shopId], references: [id])
+  affiliates      Affiliate[]
+
+  @@index([shopId])
+  @@index([commerceAccountId])
+  @@map("affiliate_programs")
+}
+
+model Affiliate {
+  id                      BigInt    @id @default(autoincrement())
+  commerceAccountId       BigInt    @map("commerce_account_id")
+  affiliateProgramId      BigInt    @map("affiliate_program_id")
+  userId                  BigInt    @map("user_id")
+  referralCode            String    @unique @map("referral_code") @db.VarChar(8)
+  customCommissionPercent Decimal?  @map("custom_commission_percent") @db.Decimal(5, 2)
+  status                  String    @default("pending") @db.VarChar(20)
+  approvedAt              DateTime? @map("approved_at")
+  approvedByUserId        BigInt?   @map("approved_by_user_id")
+  createdAt               DateTime? @default(now()) @map("created_at")
+  updatedAt               DateTime? @updatedAt @map("updated_at")
+
+  commerceAccount    CommerceAccount       @relation(fields: [commerceAccountId], references: [id])
+  affiliateProgram   AffiliateProgram      @relation(fields: [affiliateProgramId], references: [id])
+  user               User                  @relation("AffiliateUser", fields: [userId], references: [id])
+  approvedByUser     User?                 @relation("AffiliateApprovedBy", fields: [approvedByUserId], references: [id])
+  links              AffiliateLink[]
+  commissions        AffiliateCommission[]
+  withdrawalRequests WithdrawalRequest[]
+  orders             Order[]
+
+  @@unique([affiliateProgramId, userId])
+  @@index([referralCode])
+  @@index([userId])
+  @@map("affiliates")
+}
+
+model AffiliateLink {
+  id              BigInt    @id @default(autoincrement())
+  affiliateId     BigInt    @map("affiliate_id")
+  productId       BigInt?   @map("product_id")
+  channelId       BigInt?   @map("channel_id")
+  shortCode       String    @unique @map("short_code") @db.VarChar(12)
+  clickCount      BigInt    @default(0) @map("click_count")
+  conversionCount BigInt    @default(0) @map("conversion_count")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  affiliate Affiliate @relation(fields: [affiliateId], references: [id])
+  product   Product?  @relation(fields: [productId], references: [id])
+  channel   Channel?  @relation(fields: [channelId], references: [id])
+  carts     Cart[]
+
+  @@index([shortCode])
+  @@index([affiliateId])
+  @@map("affiliate_links")
+}
+
+model AffiliateCommission {
+  id                BigInt    @id @default(autoincrement())
+  commerceAccountId BigInt    @map("commerce_account_id")
+  affiliateId       BigInt    @map("affiliate_id")
+  orderId           BigInt    @map("order_id")
+  orderItemId       BigInt    @map("order_item_id")
+  amount            Decimal   @db.Decimal(12, 2)
+  percentApplied    Decimal   @map("percent_applied") @db.Decimal(5, 2)
+  status            String    @default("pending") @db.VarChar(20)
+  approvedAt        DateTime? @map("approved_at")
+  paidAt            DateTime? @map("paid_at")
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  commerceAccount CommerceAccount @relation(fields: [commerceAccountId], references: [id])
+  affiliate       Affiliate       @relation(fields: [affiliateId], references: [id])
+  order           Order           @relation(fields: [orderId], references: [id])
+  orderItem       OrderItem       @relation(fields: [orderItemId], references: [id])
+
+  @@index([affiliateId, status])
+  @@index([orderId])
+  @@map("affiliate_commissions")
+}
+
+/// Polymorphic owner — bankable_type + bankable_id are app-layer resolved; no Prisma relation.
+model BankAccount {
+  id                BigInt    @id @default(autoincrement())
+  bankableType      String    @map("bankable_type") @db.VarChar(100)
+  bankableId        BigInt    @map("bankable_id")
+  bankName          String    @map("bank_name") @db.VarChar(100)
+  bankCode          String?   @map("bank_code") @db.VarChar(10)
+  accountNumber     String    @map("account_number") @db.VarChar(50)
+  accountHolderName String    @map("account_holder_name") @db.VarChar(255)
+  isVerified        Boolean   @default(false) @map("is_verified")
+  isDefault         Boolean   @default(false) @map("is_default")
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([bankableType, bankableId])
+  @@map("bank_accounts")
+}
+
+model WithdrawalRequest {
+  id                BigInt    @id @default(autoincrement())
+  commerceAccountId BigInt    @map("commerce_account_id")
+  affiliateId       BigInt    @map("affiliate_id")
+  bankAccountId     BigInt    @map("bank_account_id")
+  amount            Decimal   @db.Decimal(12, 2)
+  status            String    @default("pending") @db.VarChar(20)
+  approvedByUserId  BigInt?   @map("approved_by_user_id")
+  approvedAt        DateTime? @map("approved_at")
+  paidAt            DateTime? @map("paid_at")
+  rejectionReason   String?   @map("rejection_reason") @db.Text
+  paymentProofUrl   String?   @map("payment_proof_url") @db.VarChar(500)
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  commerceAccount CommerceAccount @relation(fields: [commerceAccountId], references: [id])
+  affiliate       Affiliate       @relation(fields: [affiliateId], references: [id])
+  bankAccount     BankAccount     @relation(fields: [bankAccountId], references: [id])
+  approvedByUser  User?           @relation(fields: [approvedByUserId], references: [id])
+
+  @@index([affiliateId, status])
+  @@index([commerceAccountId, status])
+  @@map("withdrawal_requests")
+}
