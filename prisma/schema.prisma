@@ -24,6 +24,8 @@ model User {
 
   ownedCommerceAccounts      CommerceAccount[]       @relation("CommerceAccountOwner")
   commerceAccountMemberships CommerceAccountMember[] @relation("CommerceAccountMembers")
+  authoredAiPromptVersions   AiPromptVersion[]       @relation("AiPromptVersionAuthor")
+  aiGenerations              AiGeneration[]          @relation("AiGenerationUser")
 
   @@map("users")
 }
@@ -41,10 +43,11 @@ model CommerceAccount {
 
   ownerUser  User                    @relation("CommerceAccountOwner", fields: [ownerUserId], references: [id])
   members    CommerceAccountMember[]
-  shops      Shop[]
-  categories Category[]
-  products   Product[]
-  channels   Channel[]
+  shops         Shop[]
+  categories    Category[]
+  products      Product[]
+  channels      Channel[]
+  aiGenerations AiGeneration[]
 
   @@index([slug])
   @@index([status])
