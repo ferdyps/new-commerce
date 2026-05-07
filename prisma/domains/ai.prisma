@@ -1,0 +1,52 @@
+// Domain: AI Generator
+
+/// Global. Versioning untuk A/B test & rollback.
+model AiPromptVersion {
+  id                 BigInt    @id @default(autoincrement())
+  name               String    @db.VarChar(100)
+  type               String    @db.VarChar(50)
+  version            String    @db.VarChar(20)
+  isActive           Boolean   @default(false) @map("is_active")
+  systemPrompt       String    @map("system_prompt") @db.Text
+  userPromptTemplate String    @map("user_prompt_template") @db.Text
+  model              String    @db.VarChar(100)
+  temperature        Decimal   @default(0.7) @db.Decimal(3, 2)
+  maxTokens          Int       @default(2000) @map("max_tokens")
+  createdByUserId    BigInt?   @map("created_by_user_id")
+  createdAt          DateTime? @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+
+  createdByUser User?           @relation("AiPromptVersionAuthor", fields: [createdByUserId], references: [id])
+  generations   AiGeneration[]
+
+  @@unique([name, version])
+  @@index([type, isActive])
+  @@map("ai_prompt_versions")
+}
+
+/// Audit log + cost tracking. Redis cache key: ai:gen:{type}:{hash(input)}
+model AiGeneration {
+  id                BigInt    @id @default(autoincrement())
+  commerceAccountId BigInt    @map("commerce_account_id")
+  userId            BigInt    @map("user_id")
+  promptVersionId   BigInt?   @map("prompt_version_id")
+  type              String    @db.VarChar(50)
+  input             Json
+  output            Json?
+  tokensInput       Int?      @map("tokens_input")
+  tokensOutput      Int?      @map("tokens_output")
+  durationMs        Int?      @map("duration_ms")
+  status            String    @db.VarChar(20)
+  cacheHit          Boolean   @default(false) @map("cache_hit")
+  errorMessage      String?   @map("error_message") @db.Text
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  commerceAccount CommerceAccount  @relation(fields: [commerceAccountId], references: [id])
+  user            User             @relation("AiGenerationUser", fields: [userId], references: [id])
+  promptVersion   AiPromptVersion? @relation(fields: [promptVersionId], references: [id])
+
+  @@index([commerceAccountId, type, createdAt])
+  @@index([status])
+  @@map("ai_generations")
+}
