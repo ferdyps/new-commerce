@@ -24,6 +24,13 @@ model User {
 
   ownedCommerceAccounts      CommerceAccount[]       @relation("CommerceAccountOwner")
   commerceAccountMemberships CommerceAccountMember[] @relation("CommerceAccountMembers")
+  affiliates                 Affiliate[]             @relation("AffiliateUser")
+  approvedAffiliates         Affiliate[]             @relation("AffiliateApprovedBy")
+  approvedWithdrawals        WithdrawalRequest[]
+  carts                      Cart[]
+  orders                     Order[]
+  pushSubscriptions          PushSubscription[]
+  notificationLogs           NotificationLog[]
   authoredAiPromptVersions   AiPromptVersion[]       @relation("AiPromptVersionAuthor")
   aiGenerations              AiGeneration[]          @relation("AiGenerationUser")
 
@@ -41,13 +48,18 @@ model CommerceAccount {
   updatedAt   DateTime? @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  ownerUser  User                    @relation("CommerceAccountOwner", fields: [ownerUserId], references: [id])
-  members    CommerceAccountMember[]
-  shops         Shop[]
-  categories    Category[]
-  products      Product[]
-  channels      Channel[]
-  aiGenerations AiGeneration[]
+  ownerUser            User                    @relation("CommerceAccountOwner", fields: [ownerUserId], references: [id])
+  members              CommerceAccountMember[]
+  shops                Shop[]
+  categories           Category[]
+  products             Product[]
+  channels             Channel[]
+  affiliatePrograms    AffiliateProgram[]
+  affiliates           Affiliate[]
+  affiliateCommissions AffiliateCommission[]
+  withdrawalRequests   WithdrawalRequest[]
+  orders               Order[]
+  aiGenerations        AiGeneration[]
 
   @@index([slug])
   @@index([status])

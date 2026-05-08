@@ -39,6 +39,9 @@ model Channel {
   template        ChannelTemplate? @relation(fields: [templateId], references: [id])
   products        ChannelProduct[]
   visits          ChannelVisit[]
+  affiliateLinks  AffiliateLink[]
+  carts           Cart[]
+  orders          Order[]
 
   @@index([slug])
   @@index([status])
