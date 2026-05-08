@@ -1,5 +1,6 @@
-import appConfig from './app.config';             
+import appConfig from './app.config';
 import databaseConfig from './database.config';
+import apiConfig from './api.config';
 
-export { appConfig, databaseConfig };                                                                                                                                                                                                       
-export const configurations = [appConfig, databaseConfig];
+export { appConfig, databaseConfig, apiConfig };
+export const configurations = [appConfig, databaseConfig, apiConfig];
